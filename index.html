@@ -1,245 +1,124 @@
-<!DOCTYPE html>
-<html lang="de" class="h-full bg-slate-900 text-slate-100">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GastroSync - Speisesaal & Küche Live System</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              500: '#0284c7',
-              600: '#0369a1',
-              700: '#075985',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #1e293b;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #475569;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #64748b;
-    }
-    /* Pulse Animation for New Orders */
-    @keyframes pulse-border {
-      0%, 100% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-      50% { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 5px rgba(239, 68, 68, 0.1); }
-    }
-    .new-order-card {
-      animation: pulse-border 2s infinite;
-    }
-  </style>
-</head>
-<body class="h-full flex flex-col font-sans select-none overflow-hidden bg-slate-900">
-
-  <!-- TOP BAR / ROLE SWITCHER -->
-  <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex justify-between items-center shrink-0 shadow-lg z-10">
-    <div class="flex items-center space-x-3">
-      <div class="bg-amber-500 text-slate-900 p-2 rounded-xl font-black text-xl flex items-center justify-center">
-        <i class="fa-solid fa-utensils"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-lg leading-tight tracking-wide text-white">GastroSync</h1>
-        <p class="text-xs text-slate-400">Live-Synchronisierung active</p>
-      </div>
-    </div>
-
-    <!-- Mode Switch Buttons -->
-    <div class="bg-slate-950 p-1.5 rounded-2xl border border-slate-800 flex space-x-1 shadow-inner">
-      <button id="btn-speisesaal" onclick="switchRole('speisesaal')" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center space-x-2 bg-amber-500 text-slate-950 shadow-md">
-        <i class="fa-solid fa-chair"></i>
-        <span>Speisesaal</span>
-      </button>
-      <button id="btn-kueche" onclick="switchRole('kueche')" class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center space-x-2 text-slate-400 hover:text-slate-200">
-        <i class="fa-solid fa-fire-burner"></i>
-        <span>Küche</span>
-        <span id="pending-badge" class="hidden bg-rose-500 text-white text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>
-      </button>
-    </div>
-
-    <!-- Status & Sound Toggle -->
-    <div class="flex items-center space-x-2">
-      <button id="audio-toggle-btn" onclick="toggleAudio(true)" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-300 transition-colors relative" title="Ton-Benachrichtigung umschalten / testen">
-        <i id="audio-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
-      </button>
+<!-- ... existing code ... -->
       <div class="hidden sm:flex items-center space-x-2 bg-slate-950/50 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-400">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span id="sync-status">Verbunden</span>
+        <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="sync-status">Verbinde Cloud...</span>
       </div>
     </div>
   </header>
+<!-- ... existing code ... -->
+  <!-- JAVASCRIPT APP LOGIC WITH FIREBASE REALTIME CLOUD DB -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-1 relative overflow-hidden bg-slate-900">
+    // Global Environment Setup
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'gastro-sync-default';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "AIzaSyDemoKeyOnlyForFallback12345",
+      authDomain: "gastrosync-demo.firebaseapp.com",
+      projectId: "gastrosync-demo",
+      storageBucket: "gastrosync-demo.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
 
-    <!-- SPEISESAAL VIEW -->
-    <section id="view-speisesaal" class="h-full flex flex-col p-4 overflow-y-auto space-y-4">
-      
-      <!-- Top Grid / Menu Selection Section (Fixierte Mindesthöhe & eignes Scrollen) -->
-      <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-4 flex flex-col min-h-[420px] shrink-0 shadow-lg">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-lg text-amber-400 flex items-center space-x-2">
-            <i class="fa-solid fa-utensils"></i>
-            <span>Speisen auswählen</span>
-          </h2>
-          <button onclick="resetOrderForm()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition-colors">
-            <i class="fa-solid fa-rotate-left mr-1"></i> Zurücksetzen
-          </button>
-        </div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        <!-- Scrollable Grid for Food Tile Items -->
-        <div id="menu-items-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto p-1 max-h-[300px]">
-          <!-- Dynamic Tiles Rendered Here -->
-        </div>
+    let currentUser = null;
+    let isInitialLoad = true;
 
-        <!-- Custom Item Input -->
-        <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-col sm:flex-row gap-2">
-          <input type="text" id="custom-item-input" placeholder="z. B. Sonderwunsch, Extra Brot..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500">
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center bg-slate-950 border border-slate-700 rounded-xl overflow-hidden">
-              <button onclick="adjustCustomQty(-1)" class="px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-lg">-</button>
-              <span id="custom-item-qty" class="px-3 font-bold text-amber-400 text-sm">1</span>
-              <button onclick="adjustCustomQty(1)" class="px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-lg">+</button>
-            </div>
-            <button onclick="addCustomItem()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition-colors whitespace-nowrap">
-              + Hinzufügen
-            </button>
-          </div>
-        </div>
-      </div>
+    // Firebase Authentication & Firestore Listener
+    async function initFirebase() {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.warn("Auth Fallback:", err);
+      }
+    }
 
-      <!-- Order Summary & Submit Panel -->
-      <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-4 shadow-lg flex flex-col sm:flex-row gap-4 items-stretch">
-        <div class="flex-1 flex flex-col">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-bold text-sm text-slate-300 flex items-center space-x-2">
-              <i class="fa-solid fa-receipt text-amber-400"></i>
-              <span>Bestellübersicht</span>
-            </h3>
-            <span id="summary-count-badge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">0 Artikel</span>
-          </div>
-          
-          <div id="order-summary-list" class="bg-slate-950/60 rounded-xl border border-slate-800 p-3 min-h-[70px] max-h-[120px] overflow-y-auto text-sm text-slate-300 flex flex-wrap gap-2">
-            <p class="text-slate-500 italic text-xs self-center">Noch keine Artikel ausgewählt.</p>
-          </div>
-        </div>
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        const dot = document.getElementById('sync-dot');
+        const status = document.getElementById('sync-status');
+        if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        if (status) status.innerText = "Cloud Online";
 
-        <div class="w-full sm:w-64 flex flex-col justify-between gap-2 border-t sm:border-t-0 sm:border-l border-slate-700/60 pt-3 sm:pt-0 sm:pl-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Tisch-Nr. / Notiz (optional):</label>
-            <input type="text" id="order-table-input" placeholder="z. B. Tisch 4" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
-          </div>
-          <button onclick="submitOrder()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center space-x-2">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span>Bestellung Senden</span>
-          </button>
-        </div>
-      </div>
+        setupOrdersListener();
+      }
+    });
 
-      <!-- History Section -->
-      <div class="bg-slate-800/60 border border-slate-700/40 rounded-2xl p-4 shadow-md">
-        <h3 class="font-bold text-sm text-slate-400 mb-2 flex items-center space-x-2">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>Kürzlich gesendete Bestellungen</span>
-        </h3>
-        <div id="speisesaal-history" class="space-y-2">
-          <p class="text-slate-500 italic text-xs">Noch keine Bestellungen aufgegeben.</p>
-        </div>
-      </div>
-    </section>
+    function getOrdersCollection() {
+      return collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+    }
 
-    <!-- KÜCHE VIEW -->
-    <section id="view-kueche" class="h-full flex flex-col overflow-hidden p-4 hidden">
-      
-      <!-- Audio Unlock Banner for Mobile/Tablet Browsers -->
-      <div id="audio-unlock-banner" class="bg-amber-500/20 border-2 border-amber-500 text-amber-300 p-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg">
-        <div class="flex items-center space-x-3">
-          <i class="fa-solid fa-volume-high text-2xl animate-bounce"></i>
-          <div>
-            <div class="font-bold text-sm">Signalton für Tablet aktivieren</div>
-            <div class="text-xs text-amber-200/80">Tippen Sie hier einmalig, damit der Küchen-Gong bei neuen Bestellungen ertönt.</div>
-          </div>
-        </div>
-        <button onclick="unlockAudioContext()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow">
-          Aktivieren
-        </button>
-      </div>
+    function setupOrdersListener() {
+      if (!currentUser) return;
 
-      <!-- Filter and Control Header -->
-      <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-3 mb-4 flex flex-wrap gap-3 items-center justify-between shadow-lg">
-        <div class="flex items-center space-x-2">
-          <span class="font-bold text-slate-200 text-sm">Filter:</span>
-          <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex space-x-1">
-            <button id="filter-pending" onclick="setKitchenFilter('pending')" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950">Offen</button>
-            <button id="filter-completed" onclick="setKitchenFilter('completed')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200">Erledigt</button>
-            <button id="filter-all" onclick="setKitchenFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200">Alle</button>
-          </div>
-        </div>
+      onSnapshot(getOrdersCollection(), (snapshot) => {
+        const newOrders = [];
+        snapshot.forEach((doc) => {
+          newOrders.push(doc.data());
+        });
 
-        <div class="flex items-center space-x-3">
-          <span id="kitchen-active-count" class="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">0 Offen</span>
-          <button onclick="clearCompletedOrders()" class="text-xs bg-slate-700 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 px-3 py-1.5 rounded-xl border border-slate-600 hover:border-rose-700 transition-colors">
-            <i class="fa-solid fa-trash-can mr-1"></i> Erledigte löschen
-          </button>
-        </div>
-      </div>
+        const previousOrderCount = orders.length;
+        orders = newOrders;
 
-      <!-- Orders Display Grid -->
-      <div id="kitchen-orders-container" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-1 align-start">
-        <!-- Kitchen cards rendered dynamically -->
-      </div>
-    </section>
+        // Signalton abspielen, wenn im Küchen-Modus eine neue Bestellung eintrifft
+        if (!isInitialLoad && orders.length > previousOrderCount) {
+          playNotificationSound();
+        }
+        isInitialLoad = false;
 
-  </main>
+        updatePendingBadge();
+        if (currentRole === 'kueche') {
+          renderKitchenOrders();
+        }
+        renderSpeisesaalHistory();
+      }, (error) => {
+        console.error("Firestore Listen Error:", error);
+      });
+    }
 
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-24 opacity-0 flex items-center space-x-3 z-50">
-    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
-    <span id="toast-message" class="text-sm font-medium">Nachricht</span>
-  </div>
+    // Storage Actions
+    async function saveOrderToCloud(order) {
+      if (!currentUser) return;
+      try {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', order.id);
+        await setDoc(docRef, order);
+      } catch (err) {
+        console.error("Error saving order:", err);
+      }
+    }
 
-  <!-- DELETE CONFIRMATION MODAL -->
-  <div id="delete-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 max-w-sm w-full shadow-2xl transform transition-all">
-      <div class="flex items-center space-x-3 text-rose-400 mb-3">
-        <div class="bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20">
-          <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-        </div>
-        <h3 class="font-bold text-lg text-white">Bestellung löschen?</h3>
-      </div>
-      <p class="text-slate-300 text-sm mb-5">Möchten Sie diese Bestellung wirklich unwiderruflich löschen?</p>
-      <div class="flex space-x-2">
-        <button onclick="closeDeleteModal()" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-xl text-sm transition-colors">
-          Abbrechen
-        </button>
-        <button id="confirm-delete-btn" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-sm transition-colors shadow-lg">
-          Löschen
-        </button>
-      </div>
-    </div>
-  </div>
+    async function updateOrderInCloud(order) {
+      if (!currentUser) return;
+      try {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', order.id);
+        await setDoc(docRef, order, { merge: true });
+      } catch (err) {
+        console.error("Error updating order:", err);
+      }
+    }
 
-  <!-- JAVASCRIPT APP LOGIC -->
-  <script>
-    // --- Application State ---
+    async function deleteOrderFromCloud(orderId) {
+      if (!currentUser) return;
+      try {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.error("Error deleting order:", err);
+      }
+    }
+
+    // App Logic State & Functions
     const MENU_ITEMS = [
       { id: 'salate', name: 'Salat', icon: 'fa-leaf' },
       { id: 'vorspeise1', name: 'Vorspeise 1', icon: 'fa-bowl-food' },
@@ -259,7 +138,6 @@
     let soundEnabled = true;
     let pendingDeleteOrderId = null;
 
-    // Web Audio Context & State
     let audioCtx = null;
 
     function getAudioContext() {
@@ -272,7 +150,7 @@
       return audioCtx;
     }
 
-    function unlockAudioContext() {
+    window.unlockAudioContext = function() {
       const ctx = getAudioContext();
       playNotificationSound();
       const banner = document.getElementById('audio-unlock-banner');
@@ -280,14 +158,13 @@
         banner.classList.add('hidden');
       }
       showToast("Gong-Signal aktiviert!", "fa-volume-high");
-    }
+    };
 
     function playNotificationSound() {
       if (!soundEnabled) return;
       try {
         const ctx = getAudioContext();
         
-        // Ton 1 (Hoch)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = 'sine';
@@ -299,7 +176,6 @@
         osc1.start(ctx.currentTime);
         osc1.stop(ctx.currentTime + 0.3);
 
-        // Ton 2
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
         osc2.type = 'triangle';
@@ -310,15 +186,14 @@
         gain2.connect(ctx.destination);
         osc2.start(ctx.currentTime + 0.15);
         osc2.stop(ctx.currentTime + 0.65);
-
       } catch (err) {
         console.log('Audio error:', err);
       }
     }
 
-    function toggleAudio(manualTest = false) {
+    window.toggleAudio = function(manualTest = false) {
       if (manualTest && soundEnabled) {
-        unlockAudioContext();
+        window.unlockAudioContext();
         return;
       }
 
@@ -330,44 +205,15 @@
         icon.className = 'fa-solid fa-volume-high text-emerald-400';
         btn.title = "Ton aktiviert";
         showToast("Ton-Benachrichtigungen aktiviert");
-        unlockAudioContext();
+        window.unlockAudioContext();
       } else {
         icon.className = 'fa-solid fa-volume-xmark text-slate-400';
         btn.title = "Ton stummgeschaltet";
         showToast("Ton stummgeschaltet", "fa-volume-xmark");
       }
-    }
+    };
 
-    // Synchronisation
-    const SYNC_CHANNEL = 'gastrosync_orders_channel';
-    const LOCAL_STORAGE_KEY = 'gastrosync_orders_data';
-    let bc;
-
-    try {
-      bc = new BroadcastChannel(SYNC_CHANNEL);
-      bc.onmessage = (event) => {
-        if (event.data && event.data.type === 'ORDERS_UPDATED') {
-          loadOrdersFromStorage();
-          if (event.data.isNewOrder) {
-            playNotificationSound();
-          }
-        }
-      };
-    } catch (e) {
-      console.warn("BroadcastChannel fallback.");
-    }
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === LOCAL_STORAGE_KEY) {
-        const oldLen = orders.length;
-        loadOrdersFromStorage();
-        if (orders.length > oldLen) {
-          playNotificationSound();
-        }
-      }
-    });
-
-    function switchRole(role) {
+    window.switchRole = function(role) {
       currentRole = role;
       const viewSpeisesaal = document.getElementById('view-speisesaal');
       const viewKueche = document.getElementById('view-kueche');
@@ -389,35 +235,7 @@
 
         renderKitchenOrders();
       }
-    }
-
-    function loadOrdersFromStorage() {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        try {
-          orders = JSON.parse(stored);
-        } catch (e) {
-          orders = [];
-        }
-      }
-      updatePendingBadge();
-      if (currentRole === 'kueche') {
-        renderKitchenOrders();
-      }
-      renderSpeisesaalHistory();
-    }
-
-    function saveOrdersAndNotify(isNewOrder = false) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
-      if (bc) {
-        bc.postMessage({ type: 'ORDERS_UPDATED', isNewOrder });
-      }
-      updatePendingBadge();
-      if (currentRole === 'kueche') {
-        renderKitchenOrders();
-      }
-      renderSpeisesaalHistory();
-    }
+    };
 
     function updatePendingBadge() {
       const pendingCount = orders.filter(o => !o.seen).length;
@@ -438,7 +256,6 @@
       }
     }
 
-    // Menu Form Rendering
     function renderMenuForm() {
       const container = document.getElementById('menu-items-container');
       if (!container) return;
@@ -463,7 +280,7 @@
       }).join('');
     }
 
-    function changeQty(itemId, delta) {
+    window.changeQty = function(itemId, delta) {
       currentQuantities[itemId] = Math.max(0, (currentQuantities[itemId] || 0) + delta);
       const valEl = document.getElementById(`qty-val-${itemId}`);
       if (valEl) {
@@ -471,15 +288,15 @@
       }
       renderMenuForm();
       updateOrderSummary();
-    }
+    };
 
-    function adjustCustomQty(delta) {
+    window.adjustCustomQty = function(delta) {
       customQtyTemp = Math.max(1, customQtyTemp + delta);
       const el = document.getElementById('custom-item-qty');
       if (el) el.innerText = customQtyTemp;
-    }
+    };
 
-    function addCustomItem() {
+    window.addCustomItem = function() {
       const input = document.getElementById('custom-item-input');
       const name = input ? input.value.trim() : '';
 
@@ -501,12 +318,12 @@
 
       updateOrderSummary();
       showToast(`"${name}" hinzugefügt`);
-    }
+    };
 
-    function removeCustomItem(id) {
+    window.removeCustomItem = function(id) {
       customItems = customItems.filter(item => item.id !== id);
       updateOrderSummary();
-    }
+    };
 
     function updateOrderSummary() {
       const summaryList = document.getElementById('order-summary-list');
@@ -554,16 +371,16 @@
       }).join('');
     }
 
-    function resetOrderForm() {
+    window.resetOrderForm = function() {
       currentQuantities = {};
       customItems = [];
       const tableInput = document.getElementById('order-table-input');
       if (tableInput) tableInput.value = '';
       renderMenuForm();
       updateOrderSummary();
-    }
+    };
 
-    function submitOrder() {
+    window.submitOrder = function() {
       let items = [];
 
       MENU_ITEMS.forEach(item => {
@@ -593,14 +410,12 @@
         seen: false
       };
 
-      orders.unshift(newOrder);
-      saveOrdersAndNotify(true);
+      saveOrderToCloud(newOrder);
       resetOrderForm();
       showToast("Bestellung an Küche gesendet!", "fa-paper-plane");
-    }
+    };
 
-    // Kitchen Logic
-    function setKitchenFilter(filter) {
+    window.setKitchenFilter = function(filter) {
       kitchenFilter = filter;
       ['pending', 'completed', 'all'].forEach(f => {
         const btn = document.getElementById(`filter-${f}`);
@@ -613,18 +428,18 @@
         }
       });
       renderKitchenOrders();
-    }
+    };
 
-    function markAsSeen(orderId) {
+    window.markAsSeen = function(orderId) {
       const order = orders.find(o => o.id === orderId);
       if (order) {
         order.seen = true;
-        saveOrdersAndNotify(false);
+        updateOrderInCloud(order);
         showToast("Als Erledigt markiert", "fa-check");
       }
-    }
+    };
 
-    function promptDeleteOrder(orderId) {
+    window.promptDeleteOrder = function(orderId) {
       pendingDeleteOrderId = orderId;
       const modal = document.getElementById('delete-modal');
       const confirmBtn = document.getElementById('confirm-delete-btn');
@@ -635,36 +450,33 @@
         };
         modal.classList.remove('hidden');
       }
-    }
+    };
 
-    function closeDeleteModal() {
+    window.closeDeleteModal = function() {
       pendingDeleteOrderId = null;
       const modal = document.getElementById('delete-modal');
       if (modal) {
         modal.classList.add('hidden');
       }
-    }
+    };
 
     function confirmDeleteOrder() {
       if (!pendingDeleteOrderId) return;
-      
-      orders = orders.filter(o => o.id !== pendingDeleteOrderId);
-      saveOrdersAndNotify(false);
+      deleteOrderFromCloud(pendingDeleteOrderId);
       closeDeleteModal();
       showToast("Bestellung gelöscht", "fa-trash-can");
     }
 
-    function clearCompletedOrders() {
-      orders = orders.filter(o => !o.seen);
-      saveOrdersAndNotify(false);
+    window.clearCompletedOrders = function() {
+      const completed = orders.filter(o => o.seen);
+      completed.forEach(o => deleteOrderFromCloud(o.id));
       showToast("Erledigte Bestellungen gelöscht", "fa-trash-can");
-    }
+    };
 
     function renderKitchenOrders() {
       const container = document.getElementById('kitchen-orders-container');
       if (!container) return;
 
-      // Sortierung: Älteste zuerst
       let sortedOrders = [...orders].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       let filtered = sortedOrders;
@@ -746,7 +558,9 @@
         return;
       }
 
-      container.innerHTML = orders.slice(0, 5).map(order => {
+      const sortedHistory = [...orders].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      container.innerHTML = sortedHistory.slice(0, 5).map(order => {
         const timeStr = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const totalItems = order.items.reduce((sum, i) => sum + i.qty, 0);
 
@@ -770,7 +584,6 @@
       }).join('');
     }
 
-    // Helpers
     function showToast(message, iconClass = 'fa-circle-check') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-message');
@@ -794,12 +607,10 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // App Initialization
-    window.onload = function() {
-      loadOrdersFromStorage();
-      renderMenuForm();
-      updateOrderSummary();
-    };
+    // App Startup
+    initFirebase();
+    renderMenuForm();
+    updateOrderSummary();
   </script>
 </body>
 </html>
