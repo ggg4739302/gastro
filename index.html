@@ -77,7 +77,7 @@
 
     <!-- Status & Sound Toggle -->
     <div class="flex items-center space-x-2">
-      <button id="audio-toggle-btn" onclick="toggleAudio()" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-300 transition-colors relative" title="Ton-Benachrichtigung umschalten">
+      <button id="audio-toggle-btn" onclick="toggleAudio(true)" class="p-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-300 transition-colors relative" title="Ton-Benachrichtigung umschalten / testen">
         <i id="audio-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
       </button>
       <div class="hidden sm:flex items-center space-x-2 bg-slate-950/50 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-400">
@@ -91,125 +91,129 @@
   <main class="flex-1 relative overflow-hidden bg-slate-900">
 
     <!-- SPEISESAAL VIEW -->
-    <section id="view-speisesaal" class="h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 gap-4">
+    <section id="view-speisesaal" class="h-full flex flex-col p-4 overflow-y-auto space-y-4">
       
-      <!-- Left side: Menu items selection grid (Garantierte Mindesthöhe & fester Bereich) -->
-      <div class="flex-1 flex flex-col min-h-[420px] lg:h-full bg-slate-800/60 rounded-2xl border border-slate-700/60 backdrop-blur-sm p-4 shadow-xl overflow-hidden shrink-0">
-        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700 shrink-0">
-          <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
-            <i class="fa-solid fa-utensils"></i> Speisen auswählen
+      <!-- Top Grid / Menu Selection Section (Fixierte Mindesthöhe & eignes Scrollen) -->
+      <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-4 flex flex-col min-h-[420px] shrink-0 shadow-lg">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="font-bold text-lg text-amber-400 flex items-center space-x-2">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Speisen auswählen</span>
           </h2>
-          <button onclick="resetOrderForm()" class="text-xs text-slate-400 hover:text-rose-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700">
-            <i class="fa-solid fa-rotate-left"></i> Zurücksetzen
+          <button onclick="resetOrderForm()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition-colors">
+            <i class="fa-solid fa-rotate-left mr-1"></i> Zurücksetzen
           </button>
         </div>
 
-        <!-- Scrollable items grid (KACHELN - mit garantierter minimaler Höhe) -->
-        <div class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 auto-rows-max min-h-[260px]" id="menu-items-container">
-          <!-- Standard Menu Tiles will be inserted here dynamically -->
+        <!-- Scrollable Grid for Food Tile Items -->
+        <div id="menu-items-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto p-1 max-h-[300px]">
+          <!-- Dynamic Tiles Rendered Here -->
         </div>
 
-        <!-- Custom Item Input (Fixed Footer) -->
-        <div class="mt-4 pt-3 border-t border-slate-700 shrink-0">
-          <label class="block text-xs font-semibold text-slate-400 mb-1.5">Benutzerdefinierter Artikel / Extra</label>
-          <div class="flex gap-2">
-            <input type="text" id="custom-item-name" placeholder="z. B. Sonderwunsch, Extrabrot..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
-            <div class="flex items-center bg-slate-900 rounded-xl border border-slate-700 px-1">
-              <button onclick="adjustCustomQty(-1)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white font-bold text-lg rounded-lg hover:bg-slate-800">-</button>
-              <input type="number" id="custom-item-qty" value="1" min="1" class="w-10 text-center bg-transparent text-amber-400 font-bold text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-              <button onclick="adjustCustomQty(1)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white font-bold text-lg rounded-lg hover:bg-slate-800">+</button>
+        <!-- Custom Item Input -->
+        <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-col sm:flex-row gap-2">
+          <input type="text" id="custom-item-input" placeholder="z. B. Sonderwunsch, Extra Brot..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500">
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center bg-slate-950 border border-slate-700 rounded-xl overflow-hidden">
+              <button onclick="adjustCustomQty(-1)" class="px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-lg">-</button>
+              <span id="custom-item-qty" class="px-3 font-bold text-amber-400 text-sm">1</span>
+              <button onclick="adjustCustomQty(1)" class="px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-lg">+</button>
             </div>
-            <button onclick="addCustomItem()" class="bg-slate-700 hover:bg-slate-600 text-amber-400 px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-1">
-              <i class="fa-solid fa-plus"></i> Hinzufügen
+            <button onclick="addCustomItem()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition-colors whitespace-nowrap">
+              + Hinzufügen
             </button>
           </div>
-          <!-- Custom items list preview -->
-          <div id="custom-items-list" class="flex flex-wrap gap-2 mt-2 max-h-20 overflow-y-auto"></div>
         </div>
       </div>
 
-      <!-- Right side: Order Summary & Confirmation -->
-      <div class="w-full lg:w-96 flex flex-col min-h-0 lg:h-full bg-slate-800/80 rounded-2xl border border-slate-700/60 backdrop-blur-sm p-4 shadow-xl shrink-0">
-        <h2 class="text-xl font-bold text-amber-400 mb-3 pb-2 border-b border-slate-700 flex items-center gap-2 shrink-0">
-          <i class="fa-solid fa-receipt"></i> Bestellübersicht
-        </h2>
-
-        <!-- Tisch/Hinweis Angabe -->
-        <div class="mb-4 shrink-0">
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Tisch-Nr. / Info (Optional)</label>
-          <input type="text" id="table-number" placeholder="z. B. Tisch 4, Extrawunsch..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-medium">
-        </div>
-
-        <!-- Selected Items Review -->
-        <div class="flex-1 overflow-y-auto min-h-[100px] max-h-[200px] lg:max-h-none bg-slate-900/60 rounded-xl p-3 border border-slate-800 space-y-2" id="order-summary-list">
-          <div class="text-center text-slate-500 py-8 text-sm italic">
-            Noch keine Artikel ausgewählt.<br>Wählen Sie oben Mengen aus.
+      <!-- Order Summary & Submit Panel -->
+      <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-4 shadow-lg flex flex-col sm:flex-row gap-4 items-stretch">
+        <div class="flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-sm text-slate-300 flex items-center space-x-2">
+              <i class="fa-solid fa-receipt text-amber-400"></i>
+              <span>Bestellübersicht</span>
+            </h3>
+            <span id="summary-count-badge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">0 Artikel</span>
+          </div>
+          
+          <div id="order-summary-list" class="bg-slate-950/60 rounded-xl border border-slate-800 p-3 min-h-[70px] max-h-[120px] overflow-y-auto text-sm text-slate-300 flex flex-wrap gap-2">
+            <p class="text-slate-500 italic text-xs self-center">Noch keine Artikel ausgewählt.</p>
           </div>
         </div>
 
-        <!-- Submit Order Button -->
-        <div class="mt-4 pt-2 shrink-0">
-          <button id="submit-order-btn" onclick="submitOrder()" disabled class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-black text-lg rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2">
+        <div class="w-full sm:w-64 flex flex-col justify-between gap-2 border-t sm:border-t-0 sm:border-l border-slate-700/60 pt-3 sm:pt-0 sm:pl-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Tisch-Nr. / Notiz (optional):</label>
+            <input type="text" id="order-table-input" placeholder="z. B. Tisch 4" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+          </div>
+          <button onclick="submitOrder()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center space-x-2">
             <i class="fa-solid fa-paper-plane"></i>
-            <span>Bestellung abschicken</span>
+            <span>Bestellung Senden</span>
           </button>
         </div>
+      </div>
 
-        <!-- Recent Submitted Orders Collapsible -->
-        <div class="mt-4 border-t border-slate-700/60 pt-3 shrink-0 flex flex-col min-h-0">
-          <div class="flex justify-between items-center text-xs font-semibold text-slate-400 mb-2">
-            <span>Letzte Bestellungen</span>
-            <span id="my-orders-count" class="bg-slate-700 px-2 py-0.5 rounded-full text-slate-300">0</span>
-          </div>
-          <div id="speisesaal-history" class="max-h-32 lg:max-h-40 overflow-y-auto space-y-2 pr-1 text-xs">
-            <!-- Order status cards will show up here -->
-          </div>
+      <!-- History Section -->
+      <div class="bg-slate-800/60 border border-slate-700/40 rounded-2xl p-4 shadow-md">
+        <h3 class="font-bold text-sm text-slate-400 mb-2 flex items-center space-x-2">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Kürzlich gesendete Bestellungen</span>
+        </h3>
+        <div id="speisesaal-history" class="space-y-2">
+          <p class="text-slate-500 italic text-xs">Noch keine Bestellungen aufgegeben.</p>
         </div>
-
       </div>
     </section>
 
     <!-- KÜCHE VIEW -->
     <section id="view-kueche" class="h-full flex flex-col overflow-hidden p-4 hidden">
       
+      <!-- Audio Unlock Banner for Mobile/Tablet Browsers -->
+      <div id="audio-unlock-banner" class="bg-amber-500/20 border-2 border-amber-500 text-amber-300 p-3 rounded-2xl mb-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-volume-high text-2xl animate-bounce"></i>
+          <div>
+            <div class="font-bold text-sm">Signalton für Tablet aktivieren</div>
+            <div class="text-xs text-amber-200/80">Tippen Sie hier einmalig, damit der Küchen-Gong bei neuen Bestellungen ertönt.</div>
+          </div>
+        </div>
+        <button onclick="unlockAudioContext()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow">
+          Aktivieren
+        </button>
+      </div>
+
       <!-- Filter and Control Header -->
       <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-2xl p-3 mb-4 flex flex-wrap gap-3 items-center justify-between shadow-lg">
         <div class="flex items-center space-x-2">
-          <span class="text-amber-400 font-bold text-lg flex items-center gap-2">
-            <i class="fa-solid fa-fire"></i> Küchenansicht
-          </span>
-          <span id="kitchen-active-count" class="bg-rose-500 text-white text-xs font-extrabold px-2.5 py-1 rounded-full">
-            0 Offen
-          </span>
+          <span class="font-bold text-slate-200 text-sm">Filter:</span>
+          <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex space-x-1">
+            <button id="filter-pending" onclick="setKitchenFilter('pending')" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950">Offen</button>
+            <button id="filter-completed" onclick="setKitchenFilter('completed')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200">Erledigt</button>
+            <button id="filter-all" onclick="setKitchenFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200">Alle</button>
+          </div>
         </div>
 
-        <!-- Filter Buttons -->
-        <div class="flex items-center space-x-2 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
-          <button id="filter-all" onclick="setKitchenFilter('all')" class="px-3 py-1.5 rounded-lg text-slate-400 transition-colors">Alle</button>
-          <button id="filter-pending" onclick="setKitchenFilter('pending')" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold transition-colors">Offen</button>
-          <button id="filter-completed" onclick="setKitchenFilter('completed')" class="px-3 py-1.5 rounded-lg text-slate-400 transition-colors">Erledigt</button>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex items-center space-x-2">
-          <button onclick="clearCompletedOrders()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5">
-            <i class="fa-solid fa-trash-can"></i> Erledigte löschen
+        <div class="flex items-center space-x-3">
+          <span id="kitchen-active-count" class="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">0 Offen</span>
+          <button onclick="clearCompletedOrders()" class="text-xs bg-slate-700 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 px-3 py-1.5 rounded-xl border border-slate-600 hover:border-rose-700 transition-colors">
+            <i class="fa-solid fa-trash-can mr-1"></i> Erledigte löschen
           </button>
         </div>
       </div>
 
-      <!-- Orders Live Grid -->
-      <div id="kitchen-orders-container" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
-        <!-- Live order cards will be populated here -->
+      <!-- Orders Display Grid -->
+      <div id="kitchen-orders-container" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-1 align-start">
+        <!-- Kitchen cards rendered dynamically -->
       </div>
     </section>
 
   </main>
 
-  <!-- TOAST / NOTIFICATION POPUP -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-emerald-500 text-slate-950 font-bold px-5 py-3 rounded-2xl shadow-2xl transition-all transform translate-y-24 opacity-0 flex items-center space-x-3 z-50">
-    <i id="toast-icon" class="fa-solid fa-circle-check text-xl"></i>
-    <span id="toast-message">Bestellung gesendet!</span>
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-24 opacity-0 flex items-center space-x-3 z-50">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+    <span id="toast-message" class="text-sm font-medium">Nachricht</span>
   </div>
 
   <!-- JAVASCRIPT APP LOGIC -->
@@ -227,12 +231,92 @@
 
     let currentQuantities = {};
     let customItems = [];
+    let customQtyTemp = 1;
     let orders = [];
     let currentRole = 'speisesaal';
     let kitchenFilter = 'pending';
     let soundEnabled = true;
 
-    // Synchronisation via BroadcastChannel & LocalStorage
+    // Web Audio Context & State
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function unlockAudioContext() {
+      const ctx = getAudioContext();
+      playNotificationSound();
+      const banner = document.getElementById('audio-unlock-banner');
+      if (banner) {
+        banner.classList.add('hidden');
+      }
+      showToast("Gong-Signal aktiviert!", "fa-volume-high");
+    }
+
+    function playNotificationSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        
+        // Ton 1 (Hoch)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, ctx.currentTime);
+        gain1.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.3);
+
+        // Ton 2
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.15);
+        gain2.gain.setValueAtTime(0.5, ctx.currentTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(ctx.currentTime + 0.15);
+        osc2.stop(ctx.currentTime + 0.65);
+
+      } catch (err) {
+        console.log('Audio error:', err);
+      }
+    }
+
+    function toggleAudio(manualTest = false) {
+      if (manualTest && soundEnabled) {
+        unlockAudioContext();
+        return;
+      }
+
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('audio-icon');
+      const btn = document.getElementById('audio-toggle-btn');
+
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-emerald-400';
+        btn.title = "Ton aktiviert";
+        showToast("Ton-Benachrichtigungen aktiviert");
+        unlockAudioContext();
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+        btn.title = "Ton stummgeschaltet";
+        showToast("Ton stummgeschaltet", "fa-volume-xmark");
+      }
+    }
+
+    // Synchronisation
     const SYNC_CHANNEL = 'gastrosync_orders_channel';
     const LOCAL_STORAGE_KEY = 'gastrosync_orders_data';
     let bc;
@@ -242,64 +326,25 @@
       bc.onmessage = (event) => {
         if (event.data && event.data.type === 'ORDERS_UPDATED') {
           loadOrdersFromStorage();
-          if (currentRole === 'kueche' && event.data.isNewOrder) {
+          if (event.data.isNewOrder) {
             playNotificationSound();
           }
         }
       };
     } catch (e) {
-      console.warn("BroadcastChannel nicht unterstützt, verwende nur localStorage fallback.");
+      console.warn("BroadcastChannel fallback.");
     }
 
-    // Storage Event Listener für Cross-Tab Fallback
     window.addEventListener('storage', (e) => {
       if (e.key === LOCAL_STORAGE_KEY) {
+        const oldLen = orders.length;
         loadOrdersFromStorage();
+        if (orders.length > oldLen) {
+          playNotificationSound();
+        }
       }
     });
 
-    // Web Audio API für Küchen-Signalton
-    function playNotificationSound() {
-      if (!soundEnabled) return;
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
-        
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-      } catch (err) {
-        console.log('Audio konnte nicht abgespielt werden', err);
-      }
-    }
-
-    function toggleAudio() {
-      soundEnabled = !soundEnabled;
-      const icon = document.getElementById('audio-icon');
-      const btn = document.getElementById('audio-toggle-btn');
-
-      if (soundEnabled) {
-        icon.className = 'fa-solid fa-volume-high text-emerald-400';
-        btn.title = "Ton aktiviert";
-        showToast("Ton-Benachrichtigungen aktiviert");
-      } else {
-        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
-        btn.title = "Ton stummgeschaltet";
-        showToast("Ton stummgeschaltet", "fa-volume-xmark");
-      }
-    }
-
-    // Rollenwechsel (Speisesaal / Küche)
     function switchRole(role) {
       currentRole = role;
       const viewSpeisesaal = document.getElementById('view-speisesaal');
@@ -324,7 +369,6 @@
       }
     }
 
-    // Data Load & Save
     function loadOrdersFromStorage() {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
@@ -362,193 +406,167 @@
         kitchenActiveCount.innerText = `${pendingCount} Offen`;
       }
 
-      if (pendingCount > 0) {
-        badge.innerText = pendingCount;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
+      if (badge) {
+        if (pendingCount > 0) {
+          badge.innerText = pendingCount;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
       }
     }
 
-    // --- Speisesaal Logic (Kacheln Render) ---
+    // Menu Form Rendering
     function renderMenuForm() {
       const container = document.getElementById('menu-items-container');
-      
-      // Falls Kacheln noch nicht erzeugt wurden, einmalig erzeugen
-      if (!container.hasChildNodes() || container.children.length !== MENU_ITEMS.length) {
-        container.innerHTML = MENU_ITEMS.map(item => {
-          return `
-            <div id="tile-${item.id}" class="flex flex-col justify-between p-4 rounded-2xl border-2 border-slate-700/80 bg-slate-900/90 transition-all shadow-md">
-              <div class="flex items-center space-x-3 mb-3">
-                <div id="tile-icon-${item.id}" class="w-12 h-12 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center text-xl font-bold transition-colors shadow-inner shrink-0">
-                  <i class="fa-solid ${item.icon}"></i>
-                </div>
-                <span class="font-extrabold text-slate-100 text-lg leading-tight">${item.name}</span>
-              </div>
+      if (!container) return;
 
-              <!-- Quantity Control Buttons -->
-              <div class="flex items-center justify-between bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
-                <button onclick="changeQty('${item.id}', -1)" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-amber-400 active:scale-95 font-black text-2xl rounded-lg border border-slate-700/80 transition-all flex items-center justify-center shadow-md">
-                  <i class="fa-solid fa-minus"></i>
-                </button>
-                
-                <input type="number" min="0" id="input-${item.id}" value="0" 
-                       onchange="setQty('${item.id}', this.value)"
-                       class="w-16 text-center bg-transparent text-amber-400 font-black text-2xl focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                
-                <button onclick="changeQty('${item.id}', 1)" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-amber-400 active:scale-95 font-black text-2xl rounded-lg border border-slate-700/80 transition-all flex items-center justify-center shadow-md">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Werte und Styling im bestehenden DOM aktualisieren (kein Neuzeichnen/Verschwinden mehr)
-      MENU_ITEMS.forEach(item => {
+      container.innerHTML = MENU_ITEMS.map(item => {
         const qty = currentQuantities[item.id] || 0;
-        const tile = document.getElementById(`tile-${item.id}`);
-        const icon = document.getElementById(`tile-icon-${item.id}`);
-        const input = document.getElementById(`input-${item.id}`);
+        const activeClass = qty > 0 ? 'border-amber-500 bg-amber-500/10' : 'border-slate-700 bg-slate-950/60';
 
-        if (input && input !== document.activeElement) {
-          input.value = qty;
-        }
-
-        if (tile && icon) {
-          if (qty > 0) {
-            tile.className = 'flex flex-col justify-between p-4 rounded-2xl border-2 border-amber-500 bg-slate-800 transition-all shadow-md';
-            icon.className = 'w-12 h-12 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-bold transition-colors shadow-inner shrink-0';
-          } else {
-            tile.className = 'flex flex-col justify-between p-4 rounded-2xl border-2 border-slate-700/80 bg-slate-900/90 transition-all shadow-md';
-            icon.className = 'w-12 h-12 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center text-xl font-bold transition-colors shadow-inner shrink-0';
-          }
-        }
-      });
+        return `
+          <div class="border ${activeClass} rounded-2xl p-3 flex flex-col justify-between transition-all shadow-sm">
+            <div class="flex items-center space-x-2 mb-2">
+              <i class="fa-solid ${item.icon} text-amber-400 text-base"></i>
+              <span class="font-bold text-sm text-slate-100 truncate">${escapeHtml(item.name)}</span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-0.5">
+              <button onclick="changeQty('${item.id}', -1)" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white font-black text-lg rounded-lg transition-colors">-</button>
+              <span id="qty-val-${item.id}" class="font-bold text-amber-400 text-base px-1">${qty}</span>
+              <button onclick="changeQty('${item.id}', 1)" class="w-9 h-9 flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white font-black text-lg rounded-lg transition-colors">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    function changeQty(id, delta) {
-      currentQuantities[id] = Math.max(0, (currentQuantities[id] || 0) + delta);
-      renderMenuForm();
-      updateOrderSummary();
-    }
-
-    function setQty(id, value) {
-      const parsed = parseInt(value) || 0;
-      currentQuantities[id] = Math.max(0, parsed);
+    function changeQty(itemId, delta) {
+      currentQuantities[itemId] = Math.max(0, (currentQuantities[itemId] || 0) + delta);
+      const valEl = document.getElementById(`qty-val-${itemId}`);
+      if (valEl) {
+        valEl.innerText = currentQuantities[itemId];
+      }
       renderMenuForm();
       updateOrderSummary();
     }
 
     function adjustCustomQty(delta) {
-      const qtyInput = document.getElementById('custom-item-qty');
-      const current = parseInt(qtyInput.value) || 1;
-      qtyInput.value = Math.max(1, current + delta);
+      customQtyTemp = Math.max(1, customQtyTemp + delta);
+      const el = document.getElementById('custom-item-qty');
+      if (el) el.innerText = customQtyTemp;
     }
 
     function addCustomItem() {
-      const nameInput = document.getElementById('custom-item-name');
-      const qtyInput = document.getElementById('custom-item-qty');
+      const input = document.getElementById('custom-item-input');
+      const name = input ? input.value.trim() : '';
 
-      const name = nameInput.value.trim();
-      const qty = parseInt(qtyInput.value) || 1;
+      if (!name) {
+        showToast("Bitte Bezeichnung eingeben", "fa-triangle-exclamation");
+        return;
+      }
 
-      if (!name) return;
+      customItems.push({
+        id: 'custom-' + Date.now(),
+        name: name,
+        qty: customQtyTemp
+      });
 
-      customItems.push({ id: 'custom_' + Date.now(), name: name, qty: qty });
-      nameInput.value = '';
-      qtyInput.value = '1';
+      if (input) input.value = '';
+      customQtyTemp = 1;
+      const el = document.getElementById('custom-item-qty');
+      if (el) el.innerText = '1';
 
-      renderCustomItemsList();
       updateOrderSummary();
+      showToast(`"${name}" hinzugefügt`);
     }
 
     function removeCustomItem(id) {
       customItems = customItems.filter(item => item.id !== id);
-      renderCustomItemsList();
       updateOrderSummary();
-    }
-
-    function renderCustomItemsList() {
-      const container = document.getElementById('custom-items-list');
-      container.innerHTML = customItems.map(item => `
-        <span class="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-semibold">
-          ${escapeHtml(item.name)} (${item.qty}x)
-          <button onclick="removeCustomItem('${item.id}')" class="hover:text-rose-400 ml-1 font-bold">&times;</button>
-        </span>
-      `).join('');
     }
 
     function updateOrderSummary() {
       const summaryList = document.getElementById('order-summary-list');
-      const submitBtn = document.getElementById('submit-order-btn');
+      const badge = document.getElementById('summary-count-badge');
+      if (!summaryList) return;
 
-      const itemsToSubmit = [];
+      let items = [];
 
       MENU_ITEMS.forEach(item => {
         const qty = currentQuantities[item.id] || 0;
         if (qty > 0) {
-          itemsToSubmit.push({ name: item.name, qty: qty });
+          items.push({ name: item.name, qty: qty, isCustom: false });
         }
       });
 
-      customItems.forEach(item => {
-        itemsToSubmit.push({ name: item.name, qty: item.qty });
+      customItems.forEach(ci => {
+        items.push({ id: ci.id, name: ci.name, qty: ci.qty, isCustom: true });
       });
 
-      if (itemsToSubmit.length === 0) {
-        summaryList.innerHTML = `
-          <div class="text-center text-slate-500 py-8 text-sm italic">
-            Noch keine Artikel ausgewählt.<br>Wählen Sie oben Mengen aus.
-          </div>`;
-        submitBtn.disabled = true;
+      const totalItems = items.reduce((sum, i) => sum + i.qty, 0);
+
+      if (badge) {
+        badge.innerText = `${totalItems} Artikel`;
+      }
+
+      if (items.length === 0) {
+        summaryList.innerHTML = '<p class="text-slate-500 italic text-xs self-center">Noch keine Artikel ausgewählt.</p>';
         return;
       }
 
-      submitBtn.disabled = false;
-      summaryList.innerHTML = itemsToSubmit.map(item => `
-        <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800 text-sm">
-          <span class="text-slate-200 font-medium">${escapeHtml(item.name)}</span>
-          <span class="bg-amber-500/20 text-amber-400 font-bold px-2 py-0.5 rounded text-xs">${item.qty}x</span>
-        </div>
-      `).join('');
+      summaryList.innerHTML = items.map(item => {
+        if (item.isCustom) {
+          return `
+            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium text-xs">
+              <strong>${item.qty}x</strong> ${escapeHtml(item.name)}
+              <button onclick="removeCustomItem('${item.id}')" class="text-amber-400 hover:text-rose-400 ml-1"><i class="fa-solid fa-xmark"></i></button>
+            </span>
+          `;
+        }
+        return `
+          <span class="bg-slate-900 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium text-xs">
+            <strong class="text-amber-400">${item.qty}x</strong> ${escapeHtml(item.name)}
+          </span>
+        `;
+      }).join('');
     }
 
     function resetOrderForm() {
       currentQuantities = {};
       customItems = [];
-      document.getElementById('table-number').value = '';
-      document.getElementById('custom-item-name').value = '';
-      document.getElementById('custom-item-qty').value = '1';
+      const tableInput = document.getElementById('order-table-input');
+      if (tableInput) tableInput.value = '';
       renderMenuForm();
-      renderCustomItemsList();
       updateOrderSummary();
     }
 
     function submitOrder() {
-      const itemsToSubmit = [];
+      let items = [];
 
       MENU_ITEMS.forEach(item => {
         const qty = currentQuantities[item.id] || 0;
         if (qty > 0) {
-          itemsToSubmit.push({ name: item.name, qty: qty });
+          items.push({ name: item.name, qty: qty });
         }
       });
 
-      customItems.forEach(item => {
-        itemsToSubmit.push({ name: item.name, qty: item.qty });
+      customItems.forEach(ci => {
+        items.push({ name: ci.name, qty: ci.qty });
       });
 
-      if (itemsToSubmit.length === 0) return;
+      if (items.length === 0) {
+        showToast("Bitte mindestens einen Artikel auswählen!", "fa-triangle-exclamation");
+        return;
+      }
 
-      const tableInput = document.getElementById('table-number').value.trim();
-      const tableName = tableInput ? tableInput : `Bestellung #${orders.length + 1}`;
+      const tableInput = document.getElementById('order-table-input');
+      const tableText = tableInput && tableInput.value.trim() ? tableInput.value.trim() : 'Ohne Tischangabe';
 
       const newOrder = {
-        id: 'ord_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        table: tableName,
-        items: itemsToSubmit,
+        id: 'ord-' + Date.now(),
+        table: tableText,
+        items: items,
         timestamp: new Date().toISOString(),
         seen: false
       };
@@ -556,42 +574,45 @@
       orders.unshift(newOrder);
       saveOrdersAndNotify(true);
       resetOrderForm();
-      showToast('Bestellung an Küche gesendet!');
+      showToast("Bestellung an Küche gesendet!", "fa-paper-plane");
     }
 
-    // --- Kitchen Orders Render ("Erledigt" Status & Button) ---
+    // Kitchen Logic
     function setKitchenFilter(filter) {
       kitchenFilter = filter;
-      document.getElementById('filter-all').className = filter === 'all' ? 'px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold transition-colors' : 'px-3 py-1.5 rounded-lg text-slate-400 transition-colors';
-      document.getElementById('filter-pending').className = filter === 'pending' ? 'px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold transition-colors' : 'px-3 py-1.5 rounded-lg text-slate-400 transition-colors';
-      document.getElementById('filter-completed').className = filter === 'completed' ? 'px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold transition-colors' : 'px-3 py-1.5 rounded-lg text-slate-400 transition-colors';
+      ['pending', 'completed', 'all'].forEach(f => {
+        const btn = document.getElementById(`filter-${f}`);
+        if (btn) {
+          if (f === filter) {
+            btn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-slate-950';
+          } else {
+            btn.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-200';
+          }
+        }
+      });
       renderKitchenOrders();
     }
 
-    function toggleOrderSeen(orderId) {
+    function markAsSeen(orderId) {
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        order.seen = !order.seen;
+        order.seen = true;
         saveOrdersAndNotify(false);
+        showToast("Als Erledigt markiert", "fa-check");
       }
     }
 
     function clearCompletedOrders() {
-      const completedCount = orders.filter(o => o.seen).length;
-      if (completedCount === 0) {
-        showToast('Keine erledigten Bestellungen zum Löschen vorhanden.', 'fa-circle-info');
-        return;
-      }
-
       orders = orders.filter(o => !o.seen);
       saveOrdersAndNotify(false);
-      showToast(`${completedCount} erledigte Bestellung(en) gelöscht.`);
+      showToast("Erledigte Bestellungen gelöscht", "fa-trash-can");
     }
 
     function renderKitchenOrders() {
       const container = document.getElementById('kitchen-orders-container');
+      if (!container) return;
 
-      // Sortierung: Älteste Bestellungen (Zuerst eingegeben) ganz oben anzeigen
+      // Sortierung: Älteste zuerst
       let sortedOrders = [...orders].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
       let filtered = sortedOrders;
@@ -603,60 +624,50 @@
 
       if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
-            <i class="fa-solid fa-utensils text-5xl mb-3 opacity-30"></i>
-            <p class="text-lg font-medium">Keine Bestellungen vorhanden</p>
-            <p class="text-xs text-slate-600 mt-1">Neue Bestellungen erscheinen hier in Echtzeit</p>
-          </div>`;
+          <div class="col-span-full py-16 text-center text-slate-500">
+            <i class="fa-solid fa-bell-concierge text-4xl mb-3 block"></i>
+            <p class="font-medium text-sm">Keine Bestellungen in dieser Ansicht vorhanden.</p>
+          </div>
+        `;
         return;
       }
 
       container.innerHTML = filtered.map(order => {
-        const timeStr = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const isSeen = order.seen;
+        const timeStr = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const cardStyle = order.seen 
+          ? 'bg-slate-800/50 border-slate-700/50 opacity-75' 
+          : 'bg-slate-800 border-2 border-rose-500/80 new-order-card';
 
         return `
-          <div class="bg-slate-800 border-2 ${isSeen ? 'border-slate-700/60 opacity-70' : 'border-rose-500/80 new-order-card'} rounded-2xl p-4 shadow-xl flex flex-col justify-between transition-all">
+          <div class="${cardStyle} rounded-2xl p-4 flex flex-col justify-between shadow-xl transition-all">
             <div>
-              <!-- Header -->
-              <div class="flex justify-between items-start mb-3 pb-2 border-b border-slate-700">
+              <div class="flex justify-between items-start mb-3 border-b border-slate-700/60 pb-2">
                 <div>
-                  <span class="text-lg font-black ${isSeen ? 'text-slate-400' : 'text-amber-400'} block">
-                    ${escapeHtml(order.table)}
-                  </span>
-                  <span class="text-xs text-slate-400 flex items-center gap-1">
-                    <i class="fa-regular fa-clock"></i> ${timeStr}
-                  </span>
+                  <h3 class="font-black text-lg text-amber-400 leading-tight">${escapeHtml(order.table)}</h3>
+                  <span class="text-xs text-slate-400 font-medium">${timeStr} Uhr</span>
                 </div>
-                <div>
-                  ${isSeen 
-                    ? `<span class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-check"></i> Erledigt</span>`
-                    : `<span class="bg-rose-500/20 text-rose-400 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-500/30 animate-pulse">NEU</span>`
-                  }
-                </div>
+                ${order.seen 
+                  ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-lg font-bold"><i class="fa-solid fa-check mr-1"></i> Erledigt</span>`
+                  : `<span class="bg-rose-500 text-white text-xs px-2.5 py-1 rounded-lg font-black animate-pulse">OFFEN</span>`
+                }
               </div>
 
-              <!-- Items List -->
               <div class="space-y-2 mb-4">
                 ${order.items.map(item => `
-                  <div class="flex justify-between items-center bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800">
-                    <span class="text-sm font-semibold text-slate-100">${escapeHtml(item.name)}</span>
-                    <span class="text-base font-black text-amber-400 bg-slate-800 px-2.5 py-0.5 rounded-lg border border-slate-700">${item.qty}x</span>
+                  <div class="flex items-center justify-between bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+                    <span class="text-sm font-bold text-slate-100">${escapeHtml(item.name)}</span>
+                    <span class="text-base font-black bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-lg">${item.qty}x</span>
                   </div>
                 `).join('')}
               </div>
             </div>
 
-            <!-- Action Button -->
-            <button onclick="toggleOrderSeen('${order.id}')" 
-                    class="w-full py-3.5 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center space-x-2 shadow-lg ${
-                      isSeen 
-                        ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' 
-                        : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
-                    }">
-              <i class="fa-solid ${isSeen ? 'fa-rotate-left' : 'fa-check'} text-base"></i>
-              <span>${isSeen ? 'Als Offen markieren' : 'Erledigt'}</span>
-            </button>
+            ${!order.seen ? `
+              <button onclick="markAsSeen('${order.id}')" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm shadow-md transition-all active:scale-95 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-check text-lg"></i>
+                <span>Erledigt</span>
+              </button>
+            ` : ''}
           </div>
         `;
       }).join('');
@@ -664,8 +675,10 @@
 
     function renderSpeisesaalHistory() {
       const container = document.getElementById('speisesaal-history');
+      if (!container) return;
+
       if (orders.length === 0) {
-        container.innerHTML = '<p class="text-slate-500 italic">Noch keine Bestellungen aufgegeben.</p>';
+        container.innerHTML = '<p class="text-slate-500 italic text-xs">Noch keine Bestellungen aufgegeben.</p>';
         return;
       }
 
@@ -676,7 +689,7 @@
         return `
           <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
             <div>
-              <div class="font-bold text-slate-200">${escapeHtml(order.table)} <span class="text-slate-500 font-normal">(${totalItems} Artikel)</span></div>
+              <div class="font-bold text-slate-200 text-sm">${escapeHtml(order.table)} <span class="text-slate-500 font-normal">(${totalItems} Artikel)</span></div>
               <div class="text-[10px] text-slate-400">${timeStr} Uhr</div>
             </div>
             <div>
@@ -690,11 +703,13 @@
       }).join('');
     }
 
-    // --- Helpers ---
+    // Helpers
     function showToast(message, iconClass = 'fa-circle-check') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-message');
       const toastIcon = document.getElementById('toast-icon');
+
+      if (!toast || !toastMsg || !toastIcon) return;
 
       toastMsg.innerText = message;
       toastIcon.className = `fa-solid ${iconClass} text-xl`;
